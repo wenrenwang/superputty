@@ -52,7 +52,9 @@ namespace SuperPutty
             this.importSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fromFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fromPuTTYSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fromPuTTYPortableSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fromPuTTYCMExportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fromWinRDPRegToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripSeparator();
             this.openSessionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -68,7 +70,7 @@ namespace SuperPutty
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sessionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.layoutsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.logViewerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showLogViewerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripSeparator();
             this.toolbarsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.quickConnectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -107,6 +109,7 @@ namespace SuperPutty
             this.toolStripButtonRunScript = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparatorSendCommands = new System.Windows.Forms.ToolStripSeparator();
             this.tbBtnSelectDocs = new System.Windows.Forms.ToolStripButton();
+            this.toolStripButtonChooseIconGroup = new System.Windows.Forms.ToolStripButton();
             this.tsConnect = new System.Windows.Forms.ToolStrip();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.tbComboProtocol = new System.Windows.Forms.ToolStripComboBox();
@@ -176,7 +179,9 @@ namespace SuperPutty
             this.importSettingsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fromFileToolStripMenuItem,
             this.fromPuTTYSettingsToolStripMenuItem,
-            this.fromPuTTYCMExportToolStripMenuItem});
+            this.fromPuTTYPortableSettingsToolStripMenuItem,
+            this.fromPuTTYCMExportToolStripMenuItem,
+            this.fromWinRDPRegToolStripMenuItem});
             this.importSettingsToolStripMenuItem.Name = "importSettingsToolStripMenuItem";
             this.importSettingsToolStripMenuItem.Size = new System.Drawing.Size(203, 22);
             this.importSettingsToolStripMenuItem.Text = "&Import Sessions";
@@ -195,12 +200,26 @@ namespace SuperPutty
             this.fromPuTTYSettingsToolStripMenuItem.Text = "From PuTTY &Settings";
             this.fromPuTTYSettingsToolStripMenuItem.Click += new System.EventHandler(this.fromPuTTYSettingsToolStripMenuItem_Click);
             // 
+            // fromPuTTYPortableSettingsToolStripMenuItem
+            // 
+            this.fromPuTTYPortableSettingsToolStripMenuItem.Name = "fromPuTTYPortableSettingsToolStripMenuItem";
+            this.fromPuTTYPortableSettingsToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.fromPuTTYPortableSettingsToolStripMenuItem.Text = "From PuTTY &Portable Settings";
+            this.fromPuTTYPortableSettingsToolStripMenuItem.Click += new System.EventHandler(this.fromPuTTYPortableSettingsToolStripMenuItem_Click);
+            // 
             // fromPuTTYCMExportToolStripMenuItem
             // 
             this.fromPuTTYCMExportToolStripMenuItem.Name = "fromPuTTYCMExportToolStripMenuItem";
             this.fromPuTTYCMExportToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
             this.fromPuTTYCMExportToolStripMenuItem.Text = "From PuTTY &CM Export";
             this.fromPuTTYCMExportToolStripMenuItem.Click += new System.EventHandler(this.fromPuTTYCMExportToolStripMenuItem_Click);
+            // 
+            // fromWinRDPRegToolStripMenuItem
+            // 
+            this.fromWinRDPRegToolStripMenuItem.Name = "fromWinRDPRegToolStripMenuItem";
+            this.fromWinRDPRegToolStripMenuItem.Size = new System.Drawing.Size(198, 22);
+            this.fromWinRDPRegToolStripMenuItem.Text = "RDP - From Win &Registry";
+            this.fromWinRDPRegToolStripMenuItem.Click += new System.EventHandler(this.fromWinRDPRegToolStripMenuItem_Click);
             // 
             // toolStripMenuItem1
             // 
@@ -285,7 +304,7 @@ namespace SuperPutty
             this.sessionsToolStripMenuItem,
             this.sessionDetailToolStripMenuItem,
             this.layoutsToolStripMenuItem,
-            this.logViewerToolStripMenuItem,
+            this.showLogViewerToolStripMenuItem,
             this.toolStripMenuItem8,
             this.toolbarsToolStripMenuItem,
             this.toolStripMenuItem6,
@@ -312,12 +331,14 @@ namespace SuperPutty
             this.layoutsToolStripMenuItem.Text = "&Layouts";
             this.layoutsToolStripMenuItem.Click += new System.EventHandler(this.layoutsToolStripMenuItem_Click);
             // 
-            // logViewerToolStripMenuItem
-            // 
-            this.logViewerToolStripMenuItem.Name = "logViewerToolStripMenuItem";
-            this.logViewerToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
-            this.logViewerToolStripMenuItem.Text = "L&og Viewer";
-            this.logViewerToolStripMenuItem.Click += new System.EventHandler(this.logViewerToolStripMenuItem_Click);
+            // showLogViewerToolStripMenuItem
+            //
+            this.showLogViewerToolStripMenuItem.Checked = global::SuperPutty.Properties.Settings.Default.ShowLogViewerTool;
+            this.showLogViewerToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Unchecked;
+            this.showLogViewerToolStripMenuItem.Name = "showLogViewerToolStripMenuItem";
+            this.showLogViewerToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
+            this.showLogViewerToolStripMenuItem.Text = "L&og Viewer";
+            this.showLogViewerToolStripMenuItem.Click += new System.EventHandler(this.toggleCheckedState);
             // 
             // toolStripMenuItem8
             // 
@@ -629,7 +650,8 @@ namespace SuperPutty
             this.tbBtnMaskText,
             this.toolStripButtonRunScript,
             this.toolStripSeparatorSendCommands,
-            this.tbBtnSelectDocs});
+            this.tbBtnSelectDocs,
+            this.toolStripButtonChooseIconGroup});
             this.tsCommands.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.tsCommands.Location = new System.Drawing.Point(0, 24);
             this.tsCommands.Name = "tsCommands";
@@ -698,6 +720,17 @@ namespace SuperPutty
             this.tbBtnSelectDocs.Size = new System.Drawing.Size(23, 22);
             this.tbBtnSelectDocs.Text = "Select Documents";
             this.tbBtnSelectDocs.Click += new System.EventHandler(this.tsBtnSelectDocs_Click);
+            // 
+            // toolStripButtonChooseIconGroup
+            // 
+            this.toolStripButtonChooseIconGroup.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.toolStripButtonChooseIconGroup.Image = global::SuperPutty.Properties.Resources.stop;
+            this.toolStripButtonChooseIconGroup.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.toolStripButtonChooseIconGroup.Name = "toolStripButtonRunScript";
+            this.toolStripButtonChooseIconGroup.Size = new System.Drawing.Size(23, 22);
+            this.toolStripButtonChooseIconGroup.Text = "toolStripButtonScript";
+            this.toolStripButtonChooseIconGroup.ToolTipText = "Select target icon-group";
+            this.toolStripButtonChooseIconGroup.Click += new System.EventHandler(this.toolStripButtonChooseIconGroup_Click);
             // 
             // tsConnect
             // 
@@ -937,10 +970,12 @@ namespace SuperPutty
         private System.Windows.Forms.ToolStripMenuItem reloadSessionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fromFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fromPuTTYSettingsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fromPuTTYPortableSettingsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fromPuTTYCMExportToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fromWinRDPRegToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem sessionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem layoutsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem logViewerToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showLogViewerToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem8;
         private System.Windows.Forms.NotifyIcon notifyicon;
         private System.Windows.Forms.ContextMenuStrip notifyIconContextMenuStrip;
@@ -949,6 +984,7 @@ namespace SuperPutty
         private System.Windows.Forms.ToolStripButton tbBtnMaskText;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorSendCommands;
         private System.Windows.Forms.ToolStripButton tbBtnSelectDocs;
+        private System.Windows.Forms.ToolStripButton toolStripButtonChooseIconGroup;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem9;
         private System.Windows.Forms.ToolStripMenuItem fullScreenToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem diagnosticsToolStripMenuItem;

@@ -82,6 +82,8 @@ namespace SuperPutty
 
         private Dictionary<Keys, SuperPuttyAction> shortcuts = new Dictionary<Keys, SuperPuttyAction>();
 
+        private ImageListPopup imgPopup = null;
+
         /// <summary>A collection containing send command history</summary>
         private SortableBindingList<HistoryEntry> tsCommandHistory = new SortableBindingList<HistoryEntry>();
 
@@ -93,6 +95,8 @@ namespace SuperPutty
             dlgFindPutty.PuttyCheck();
 
             InitializeComponent();
+
+            FixDpiScalingIssues();
 
             // force toolbar locations...designer likes to flip them around
             this.tsConnect.Location = new System.Drawing.Point(0, 24);
@@ -110,7 +114,7 @@ namespace SuperPutty
             // tool windows
             this.sessions = new SingletonToolWindowHelper<SessionTreeview>("Sessions", this.DockPanel, null, x => new SessionTreeview(x.DockPanel));
             this.layouts = new SingletonToolWindowHelper<LayoutsList>("Layouts", this.DockPanel);
-            this.logViewer = new SingletonToolWindowHelper<Log4netLogViewer>("Log Viewer", this.DockPanel);
+            this.logViewer = new SingletonToolWindowHelper<Log4netLogViewer>("Log Viewer", this.DockPanel, null, null, this.showLogViewerToolStripMenuItem);
             this.sessionDetail = new SingletonToolWindowHelper<SessionDetail>("Session Detail", this.DockPanel, this.sessions,
                                                                               x => {
                                                                                   return new SessionDetail(x.InitializerResource as SingletonToolWindowHelper<SessionTreeview>);
@@ -185,6 +189,22 @@ namespace SuperPutty
 
             this.DockPanel.ContentAdded += DockPanel_ContentAdded;
             this.DockPanel.ContentRemoved += DockPanel_ContentRemoved;
+
+            this.tsCommands.ImageList = SuperPuTTY.ImagesWithStop;
+            this.toolStripButtonChooseIconGroup.ImageKey = "stop";
+        }
+
+        private void FixDpiScalingIssues()
+        {
+            this.tbComboProtocol.Size = DpiUtils.ScaleSize(this.tbComboProtocol.Size);
+            this.tbComboProtocol.DropDownWidth = DpiUtils.ScaleWidth(this.tbComboProtocol.DropDownWidth);
+            this.tbTxtBoxHost.Size = DpiUtils.ScaleSize(this.tbTxtBoxHost.Size);
+            this.tbTxtBoxLogin.Size = DpiUtils.ScaleSize(this.tbTxtBoxLogin.Size);
+            this.tbTxtBoxPassword.Size = DpiUtils.ScaleSize(this.tbTxtBoxPassword.Size);
+            this.tbComboSession.Size = DpiUtils.ScaleSize(this.tbComboSession.Size);
+
+            this.tsSendCommandCombo.Size = DpiUtils.ScaleSize(this.tsSendCommandCombo.Size);
+            this.tsSendCommandCombo.DropDownWidth = DpiUtils.ScaleWidth(this.tsSendCommandCombo.DropDownWidth);
         }
 
         private void TsCommandHistory_ListChanged(object sender, ListChangedEventArgs e)
@@ -266,7 +286,7 @@ namespace SuperPutty
             }
 
             // save layout for auto-restore
-            if (SuperPuTTY.Settings.DefaultLayoutName == LayoutData.AutoRestore)
+            if (SuperPuTTY.Settings.DefaultLayoutName == LayoutData.AutoRestore && e.CloseReason != CloseReason.TaskManagerClosing && e.CloseReason != CloseReason.WindowsShutDown)
             {
                 SaveLayout(SuperPuTTY.AutoRestoreLayoutPath, "Saving auto-restore layout");
             }
@@ -405,6 +425,32 @@ namespace SuperPutty
             }
         }
 
+        private void fromPuTTYPortableSettingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FolderBrowserDialog openDialog = new FolderBrowserDialog
+            {
+                Description = "Select the portable 'Sessions' folder location",
+                ShowNewFolderButton = false,
+                RootFolder = Environment.SpecialFolder.MyComputer
+            };
+            if (openDialog.ShowDialog(this) == DialogResult.OK)
+            {
+                SuperPuTTY.ImportSessionsFromFolder(openDialog.SelectedPath);
+            }
+        }
+
+        private void fromWinRDPRegToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DialogResult res = MessageBox.Show(
+                "Do you want to copy all RDP sessions from registry cache?  Duplicates may be created.",
+                "SuperPuTTY",
+                MessageBoxButtons.YesNo);
+            if (res == DialogResult.Yes)
+            {
+                SuperPuTTY.ImportRDPSessionsFromWinReg();
+            }
+        }
+
         private void openSessionToolStripMenuItem_Click(object sender, EventArgs e)
         {
             QuickSelector q = new QuickSelector();
@@ -431,7 +477,7 @@ namespace SuperPutty
             QuickSelector d = new QuickSelector();
             if (d.ShowDialog(this, data, opt) == DialogResult.OK)
             {
-                SuperPuTTY.OpenPuttySession(d.SelectedItem.Detail);
+                SuperPuTTY.OpenProtoSession(d.SelectedItem.Detail);
             }
         }
 
@@ -502,6 +548,7 @@ namespace SuperPutty
             SuperPuTTY.Settings.ShowToolBarCommands = this.sendCommandsToolStripMenuItem.Checked;
             SuperPuTTY.Settings.AlwaysOnTop = this.alwaysOnTopToolStripMenuItem.Checked;
             SuperPuTTY.Settings.ShowMenuBar = this.showMenuBarToolStripMenuItem.Checked;
+            SuperPuTTY.Settings.ShowLogViewerTool = this.showLogViewerToolStripMenuItem.Checked;
 
             SuperPuTTY.Settings.Save();
 
@@ -525,6 +572,12 @@ namespace SuperPutty
 
             this.menuStrip1.Visible = SuperPuTTY.Settings.ShowMenuBar;
             this.showMenuBarToolStripMenuItem.Checked = SuperPuTTY.Settings.ShowMenuBar;
+
+            if (SuperPuTTY.Settings.ShowLogViewerTool)
+                this.ShowLogViewer();
+            else
+                this.logViewer.Hide();
+            this.showLogViewerToolStripMenuItem.Checked = SuperPuTTY.Settings.ShowLogViewerTool;
         }
 
         private void sessionsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -540,7 +593,7 @@ namespace SuperPutty
             }
         }
 
-        private void logViewerToolStripMenuItem_Click(object sender, EventArgs e)
+        private void ShowLogViewer()
         {
             this.logViewer.ShowWindow(DockState.DockBottom);
         }
@@ -636,8 +689,9 @@ namespace SuperPutty
                 this.ConnectionBar = this.MainForm.quickConnectionToolStripMenuItem.Checked;
                 this.CommandBar = this.MainForm.sendCommandsToolStripMenuItem.Checked;
 
+                this.LogWindow = this.MainForm.showLogViewerToolStripMenuItem.Checked;
+
                 this.SessionsWindow = this.MainForm.sessions.IsVisible;
-                this.LogWindow = this.MainForm.logViewer.IsVisible;
                 this.LayoutWindow = this.MainForm.layouts.IsVisible;
                 this.SessionDetail = this.MainForm.sessionDetail.IsVisible;
 
@@ -657,6 +711,9 @@ namespace SuperPutty
                     this.MainForm.layouts.Hide();
                     this.MainForm.logViewer.Hide();
                     this.MainForm.sessionDetail.Hide();
+
+                    // log window
+                    this.MainForm.logViewer.Hide();
 
                     // status bar
                     this.MainForm.statusStrip1.Hide();
@@ -695,8 +752,10 @@ namespace SuperPutty
                     // windows
                     if (this.SessionsWindow) { this.MainForm.sessions.Restore(); }
                     if (this.LayoutWindow) { this.MainForm.layouts.Restore(); }
-                    if (this.LogWindow) { this.MainForm.logViewer.Restore(); }
                     if (this.SessionDetail) { this.MainForm.sessionDetail.Restore(); }
+
+                    // log window
+                    if (this.LogWindow) { this.MainForm.ShowLogViewer(); }
 
                     // status bar
                     if (this.StatusBar) { this.MainForm.statusStrip1.Show(); }
@@ -1115,7 +1174,7 @@ namespace SuperPutty
 
         private void tbBtnSendCommand_Click(object sender, EventArgs e)
         {
-            TrySendCommandsFromToolbar(!this.tbBtnMaskText.Checked);
+            TrySendCommandsFromToolbar(new CommandData(this.tsSendCommandCombo.Text, new KeyEventArgs(Keys.Enter)), !this.tbBtnMaskText.Checked);
         }
 
         private void toggleCommandMaskToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1160,6 +1219,10 @@ namespace SuperPutty
                     if (doc is ctlPuttyPanel)
                     {
                         ctlPuttyPanel panel = doc as ctlPuttyPanel;
+                        if (this.toolStripButtonChooseIconGroup.ImageKey != "" && this.toolStripButtonChooseIconGroup.ImageKey != "stop" && (panel.Session.ImageKey == "" || panel.Session.ImageKey != this.toolStripButtonChooseIconGroup.ImageKey))
+                        {
+                            continue;
+                        }
                         if (this.sendCommandsDocumentSelector.IsDocumentSelected(panel))
                         {
                             System.IntPtr hPtr = panel.AppPanel.AppWindowHandle;
@@ -1528,7 +1591,7 @@ namespace SuperPutty
                     break;
                 case SuperPuttyAction.DuplicateSession:
                     if (activePanel != null && activePanel.Session != null)
-                        SuperPuTTY.OpenPuttySession(activePanel.Session);
+                        SuperPuTTY.OpenProtoSession(activePanel.Session);
                     break;
                 case SuperPuttyAction.GotoCommandBar:
                     if (!this.fullscreenViewState.IsFullScreen)
@@ -1849,6 +1912,46 @@ namespace SuperPutty
             }
         }
 
+        #region Icon
+
+        /// <summary>Open an icon selector which allows to force sending only to connections using the same icon.</summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void toolStripButtonChooseIconGroup_Click(object sender, EventArgs e)
+        {            
+            if (this.imgPopup == null)
+            {
+                // TODO: ImageList is null on initial installation and will throw a nullreference exception when creating a new session and trying to select an image.
+
+                int n = tsCommands.ImageList.Images.Count;
+                int x = (int) Math.Floor(Math.Sqrt(n)) + 1;
+                int cols = x;
+                int rows = x;
+
+                imgPopup = new ImageListPopup
+                {
+                    BackgroundColor = Color.FromArgb(241, 241, 241),
+                    BackgroundOverColor = Color.FromArgb(102, 154, 204)
+                };
+                imgPopup.Init(this.tsCommands.ImageList, 8, 8, cols, rows);
+                imgPopup.ItemClick += new ImageListPopupEventHandler(this.OnIconFilterClicked);
+            }
+
+            Point pt = PointToScreen(new Point(this.toolStripButtonChooseIconGroup.Bounds.Left, this.toolStripButtonChooseIconGroup.Bounds.Bottom));
+            imgPopup.Show(pt.X + 2, pt.Y);       
+        }
+
+        private void OnIconFilterClicked(object sender, ImageListPopupEventArgs e)
+        {
+            if (imgPopup == sender)
+            {
+                toolStripButtonChooseIconGroup.ImageKey = e.SelectedItem;
+                Log.Info("Changed icon filter to: " + this.toolStripButtonChooseIconGroup.ImageKey);
+            }
+        } 
+
+        #endregion
+
         private void SnapWindow(Keys direction)
         {
             NativeMethods.SetForegroundWindow(this.Handle);
@@ -1881,7 +1984,7 @@ namespace SuperPutty
 
             if (this.WindowState == FormWindowState.Maximized)
             {
-                NativeMethods.SetWindowPos(this.Handle, 0,
+                NativeMethods.SetWindowPos(this.Handle, IntPtr.Zero,
                     nextScreen.Bounds.X, nextScreen.Bounds.Y, nextScreen.Bounds.Width, nextScreen.Bounds.Height,
                     NativeMethods.SWP_NOZORDER | NativeMethods.SWP_ASYNCWINDOWPOS | NativeMethods.SWP_FRAMECHANGED);
             }

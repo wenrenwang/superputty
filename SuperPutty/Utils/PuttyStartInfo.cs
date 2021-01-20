@@ -24,6 +24,14 @@ namespace SuperPutty.Utils
                 case ConnectionProtocol.VNC:
                     return TryParseEnvVars(SuperPuTTY.Settings.VNCExe);
 
+                case ConnectionProtocol.RDP:
+                    return TryParseEnvVars(SuperPuTTY.Settings.RDPExe);
+
+                case ConnectionProtocol.WINCMD:
+                    return Environment.ExpandEnvironmentVariables("%systemroot%\\system32\\cmd.exe");
+                case ConnectionProtocol.PS:
+                    return Environment.ExpandEnvironmentVariables("%systemroot%\\system32\\windowspowershell\\v1.0\\powershell.exe");
+
                 default:
                     return TryParseEnvVars(SuperPuTTY.Settings.PuttyExe);
             }
@@ -52,6 +60,24 @@ namespace SuperPutty.Utils
                 VNCStartInfo vnc = new VNCStartInfo(session);
                 this.Args = vnc.Args;
                 this.WorkingDir = vnc.StartingDir;
+            }
+            else if (session.Proto == ConnectionProtocol.RDP)
+            {
+                RDPStartInfo rdp = new RDPStartInfo(session, this.Executable);
+                this.Args = rdp.Args;
+                this.WorkingDir = rdp.StartingDir;
+            }
+            else if (session.Proto == ConnectionProtocol.WINCMD)
+            {
+                WCMDStartInfo wcmd = new WCMDStartInfo(session);
+                this.Args = wcmd.Args;
+                this.WorkingDir = wcmd.StartingDir;
+            }
+            else if (session.Proto == ConnectionProtocol.PS)
+            {
+                PSStartInfo ps = new PSStartInfo(session);
+                this.Args = ps.Args;
+                this.WorkingDir = ps.StartingDir;
             }
             else
             {

@@ -61,6 +61,9 @@
   <PropertyGroup>
     <ApplicationIcon>Apps-utilities-terminal.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="log4net, Version=2.0.8.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.8\lib\net45-full\log4net.dll</HintPath>
@@ -101,6 +104,7 @@
     <Compile Include="GitRelease.cs" />
     <Compile Include="Gui\BaseViewModel.cs" />
     <Compile Include="Gui\DataGridViewProgressColumn.cs" />
+    <Compile Include="Gui\DpiUtils.cs" />
     <Compile Include="Gui\ImageListPopup.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -190,6 +194,7 @@
     </Compile>
     <Compile Include="Data\LayoutData.cs" />
     <Compile Include="Data\PuttyDataHelper.cs" />
+    <Compile Include="Data\RDPDataHelper.cs" />
     <Compile Include="Data\SessionData.cs" />
     <Compile Include="Data\SessionDataStartInfo.cs" />
     <Compile Include="DebugLogViewer.cs">
@@ -274,6 +279,9 @@
     <Compile Include="Utils\HostConnectionString.cs" />
     <Compile Include="Utils\MinttyStartInfo.cs" />
     <Compile Include="Utils\VNCStartInfo.cs" />
+    <Compile Include="Utils\RDPStartInfo.cs" />
+    <Compile Include="Utils\WCMDStartInfo.cs" />
+    <Compile Include="Utils\PSStartInfo.cs" />
     <Compile Include="Utils\NativeMethods.cs" />
     <Compile Include="Utils\PortableSettingsProvider.cs" />
     <Compile Include="Utils\PropertyNotifiableObject.cs" />
@@ -431,6 +439,7 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
+    <None Include="app.manifest" />
     <None Include="Gui\QuickSelectorData.xsc">
       <DependentUpon>QuickSelectorData.xsd</DependentUpon>
     </None>
@@ -473,14 +482,18 @@
     <None Include="Resources\computer.png" />
     <None Include="Resources\tick.png" />
     <None Include="Resources\server_go.png" />
+    <None Include="Resources\stop.png" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>IF NOT EXIST "$(SolutionDir)bin\Release\themes" mkdir "$(SolutionDir)bin\Release\themes"
 IF NOT EXIST "$(SolutionDir)bin\Release\themes\default" xcopy /E  /Y "$(ProjectDir)Resources\themes" "$(SolutionDir)bin\Release\themes\"
+IF EXIST "$(SolutionDir)bin\Release\themes\default\icons" xcopy /D "$(ProjectDir)Resources\themes\default\icons\*.png" "$(SolutionDir)bin\Release\themes\default\icons\"
 IF NOT EXIST "$(SolutionDir)bin\Debug\themes" mkdir "$(SolutionDir)bin\Debug\themes" 
-IF NOT EXIST "$(SolutionDir)bin\Debug\themes\default" xcopy /E  /Y "$(ProjectDir)Resources\themes" "$(SolutionDir)bin\Debug\themes\"</PostBuildEvent>
+IF NOT EXIST "$(SolutionDir)bin\Debug\themes\default" xcopy /E  /Y "$(ProjectDir)Resources\themes" "$(SolutionDir)bin\Debug\themes\"
+IF EXIST "$(SolutionDir)bin\Debug\themes\default\icons" xcopy /D "$(ProjectDir)Resources\themes\default\icons\*.png" "$(SolutionDir)bin\Debug\themes\default\icons\"
+SET errorlevel=</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
